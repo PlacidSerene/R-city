@@ -7,11 +7,12 @@ library(ggplot2)
 library(modelr)
 library(purrr)
 
+
 # Data 
 load('census_city_2009.Rda')
 load('census_city_2014.Rda')
 load('census_city_2019.Rda')
-load('example_df.Rda')
+# load('example_df.Rda')
 
 # Setup
 
@@ -50,5 +51,25 @@ city <- city %>% mutate(homeless=population - population_in_house,
 
 
 # 3 cities have the most homeless in 2019?
-highest_number_homeless <- city %>% arrange(desc(homeless))
+highest_number_homeless <- city %>% arrange(desc(homeless)) %>% slice(1:3) %>% select(city,homeless)
+highest_rate_homeless <- city %>% arrange(desc(homeless_rate)) %>% slice(1:3) %>% select(city,homeless_rate)
 
+
+# 4. What are the fastest growing cities? Show 3 plots combined with grid arrange.
+fastest_growing_cities <- city %>% arrange(desc(expected_growth)) %>% slice(1:10) %>% mutate(top='Top 10 expected growth')
+fastest_expected_rate_cities <- city %>% arrange(desc(expected_growth_rate)) %>% slice(1:10) %>% mutate(top='Top 10 growth rate')
+
+top_city <- fastest_growing_cities %>% select(city,top) %>% right_join(city, by="city") 
+top_city <- top_city %>% arrange(desc(expected_growth_rate))
+top_city[1:10,]$top <- 'Top 10 growth rate'
+top_city
+
+## New method
+top_city <- city %>% mutate(top='other') %>% arrange(desc(expected_growth))
+top_city[1:10,]$top <- 'Top 10 Growth'
+top_city <- top_city %>% arrange(desc(expected_growth_rate))
+top_city[1:10,]$top <- 'Top 10 Growth Rate'
+
+plot1 <- ggplot(fastest_growing_cities, aes(x=city, y=expected_growth)) +geom_bar(stat='identity') + coord_flip()
+plot2 <- ggplot(fastest_expected_rate_cities, aes(x=city, y=expected_growth_rate)) +geom_bar(stat='identity') + coord_flip()
+plot3
