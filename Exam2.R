@@ -72,3 +72,7 @@ grid.arrange(plot1,plot2,plot3, ncol=1)
 # 5. Do growing cities have higher homeless rates?
 # Show a scatterplot between the rate of growth and the rate of homeless in 2019.
 plot4 <- ggplot(top_city, aes(x=homeless_rate, y=expected_growth_rate)) +geom_point()
+
+
+#6. What cities have the highest expected increase in homelessness and how could they eliminate homelessness?
+homeless_increase <- city %>% arrange(desc(expected_homeless_increase)) %>% slice(1:10)
