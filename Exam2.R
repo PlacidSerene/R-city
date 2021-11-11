@@ -6,6 +6,7 @@ library(knitr)
 library(ggplot2)
 library(modelr)
 library(purrr)
+library(gridExtra)
 
 
 # Data 
@@ -56,20 +57,18 @@ highest_rate_homeless <- city %>% arrange(desc(homeless_rate)) %>% slice(1:3) %>
 
 
 # 4. What are the fastest growing cities? Show 3 plots combined with grid arrange.
-fastest_growing_cities <- city %>% arrange(desc(expected_growth)) %>% slice(1:10) %>% mutate(top='Top 10 expected growth')
-fastest_expected_rate_cities <- city %>% arrange(desc(expected_growth_rate)) %>% slice(1:10) %>% mutate(top='Top 10 growth rate')
-
-top_city <- fastest_growing_cities %>% select(city,top) %>% right_join(city, by="city") 
-top_city <- top_city %>% arrange(desc(expected_growth_rate))
-top_city[1:10,]$top <- 'Top 10 growth rate'
-top_city
 
 ## New method
-top_city <- city %>% mutate(top='other') %>% arrange(desc(expected_growth))
+top_city <- city %>% mutate(top='Others') %>% arrange(desc(expected_growth))
+plot1 <- ggplot(top_city[1:10,], aes(x=city, y=expected_growth)) +geom_bar(stat='identity') + coord_flip()
 top_city[1:10,]$top <- 'Top 10 Growth'
 top_city <- top_city %>% arrange(desc(expected_growth_rate))
+plot2 <- ggplot(top_city[1:10,], aes(x=city, y=expected_growth_rate)) +geom_bar(stat='identity') + coord_flip()
 top_city[1:10,]$top <- 'Top 10 Growth Rate'
+top_city$top <- factor(top_city$top, levels = c('Top 10 Growth','Top 10 Growth Rate','Others'))
+plot3 <- ggplot(top_city, aes(x=expected_growth, y=expected_growth_rate, color=top)) + geom_point() + scale_colour_manual(values=c('red','green','gray'))
 
-plot1 <- ggplot(fastest_growing_cities, aes(x=city, y=expected_growth)) +geom_bar(stat='identity') + coord_flip()
-plot2 <- ggplot(fastest_expected_rate_cities, aes(x=city, y=expected_growth_rate)) +geom_bar(stat='identity') + coord_flip()
-plot3
+grid.arrange(plot1,plot2,plot3, ncol=1)
+# 5. Do growing cities have higher homeless rates?
+# Show a scatterplot between the rate of growth and the rate of homeless in 2019.
+plot4 <- ggplot(top_city, aes(x=homeless_rate, y=expected_growth_rate)) +geom_point()
