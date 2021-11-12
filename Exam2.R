@@ -1,4 +1,3 @@
-options(stringsAsFactors = FALSE)
 # Recommended packages
 library(dplyr)
 library(tidyr)
@@ -71,8 +70,28 @@ plot3 <- ggplot(top_city, aes(x=expected_growth, y=expected_growth_rate, color=t
 grid.arrange(plot1,plot2,plot3, ncol=1)
 # 5. Do growing cities have higher homeless rates?
 # Show a scatterplot between the rate of growth and the rate of homeless in 2019.
-plot4 <- ggplot(top_city, aes(x=homeless_rate, y=expected_growth_rate)) +geom_point()
+plot4 <- ggplot(top_city, aes(x=expected_growth_rate, y=homeless_rate)) +geom_point()
+test <-  cor(top_city$homeless_rate, top_city$expected_growth_rate)
+
+correlation <- top_city %>% keep(is.numeric) %>% select(-year) %>% pivot_longer(names_to='key', values_to ='value', -homeless_rate) %>% group_by(key) %>% summarize(cor=cor(value,homeless_rate,use='complete.obs'))%>% 
+  mutate(Rank = dense_rank(1-abs(cor))) %>% arrange(Rank) 
+# slight relationship
+# 1 or 2 other features: since others relate to homeless, I would pick household_income and household_size. They have a negative cor meaning that cities which have small household size and less income will likely to have higher rate of homeless.
+
+
+
 
 
 #6. What cities have the highest expected increase in homelessness and how could they eliminate homelessness?
 homeless_increase <- city %>% arrange(desc(expected_homeless_increase)) %>% slice(1:10)
+top_city <- top_city %>% mutate(build=ceiling(expected_homeless/household_size))
+top_city <- top_city %>% mutate(share=(population_2029/housing_units)-household_size)
+top_city <- top_city %>% mutate(top_homeless='Others') %>% arrange(desc(expected_homeless_increase))
+top_city[1:100,]$top_homeless <- 'Top Homeless Increase'
+top_city$top_homeless <- factor(top_city$top_homeless, levels = c('Top Homeless Increase','Others'))
+plot5 <- ggplot(top_city, aes(x=longitude,y=latitude,color=top_homeless)) + geom_point() + borders('state') + scale_colour_manual(values=c('red','green'))
+#Average for all cities
+house_and_share <- data.frame(avg_build=mean(top_city$build), avg_share=mean(top_city$share))
+
+more_house <- top_city %>% arrange(desc(build)) %>% slice(1:10)
+more_share <- top_city %>% arrange(desc(share)) %>% slice(1:10)
